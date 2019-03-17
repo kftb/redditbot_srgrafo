@@ -59,6 +59,7 @@ def check_for_submissions():
         logger.info("---------------------")
         logger.info("Starting the process now for ID %s", entry)
         make_entry(entry)
+    wait(WAITTIME)
 
     'If not, sleep and repeat in 5 minutes'
 
@@ -300,5 +301,10 @@ def time_difference_to_now(time1):
     diff = (now - time1).total_seconds() / 3600
 
     return diff
+
+def wait(wait_time):
+    logger.info("Let's wait a little bit...")
+    time.sleep(wait_time)
+    check_for_submissions()
 
 check_for_submissions()
