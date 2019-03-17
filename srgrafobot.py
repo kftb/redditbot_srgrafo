@@ -305,7 +305,7 @@ def time_difference_to_now(time1):
     return diff
 
 def wait(wait_time):
-    logger.info("Let's wait a little bit...")
+    logger.info("Let's wait for %s", WAITTIME)
     time.sleep(wait_time)
     check_for_submissions()
 
