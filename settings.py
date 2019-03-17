@@ -1,0 +1,9 @@
+
+DB = 'srgrafo.db'
+HOUR_THRESHOLD = 72
+
+OVERRIDE_SUBMISSIONS = False
+OVERRIDE_LIST = ['afd9jw']
+
+WRITE_REPLIES = True
+WAITTIME = 480

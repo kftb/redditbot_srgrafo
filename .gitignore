@@ -121,8 +121,6 @@ dmypy.json
 .pyre/
 .pyc
 
-settings.py
-
 ### Python Patch ###
 .venv/
 

@@ -1,5 +1,7 @@
 import praw
 from peewee import *
+
+from secret import *
 from settings import *
 from srgrafobot_peewee import User, Submission
 from datetime import datetime
