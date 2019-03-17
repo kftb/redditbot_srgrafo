@@ -3,13 +3,16 @@ from peewee import *
 from settings import *
 from srgrafobot_peewee import User, Submission
 from datetime import datetime
+from praw.exceptions import APIException
 
 import hashlib
 import logging
 
+import time
+
 # Log everything
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s",
     handlers=[
         logging.FileHandler("{0}/{1}.log".format("./logs/", "srgrafobot")),
@@ -44,11 +47,17 @@ def check_for_submissions():
     if OVERRIDE_SUBMISSIONS:
         list_total = OVERRIDE_LIST
 
+        logger.warning("There are %s entries but OVERRIDE_SUBMISSIONS is overwriting this.", len(OVERRIDE_LIST))
+
+
+
     else:
         list_total = list_curr + list_new
 
     'If there is a new entry, start routine'
     for entry in list_total:
+        logger.info("---------------------")
+        logger.info("Starting the process now for ID %s", entry)
         make_entry(entry)
 
     'If not, sleep and repeat in 5 minutes'
@@ -93,7 +102,8 @@ def check_for_new_submissions():
                 'date':submission.created_utc,
                 'title':submission.title,
                 'thread':True,
-                'comment':False
+                'comment':False,
+                'post_created':False
                 }
         )
 
@@ -117,9 +127,11 @@ def make_entry(thread_id):
     check_existing = check_for_existing_table(submission)
 
     if check_existing is not False:
+        logger.info("This entry already does have a table to maintain")
         update_table(check_existing, submission)
 
     else:
+        logger.info("This thread is without table, let's create it")
         create_new_table(submission)
 
 
@@ -142,32 +154,39 @@ def check_for_existing_table(submission):
                 return summary_comment_id
 
             else:
-                logger.info("No existing comment was found")
                 response = False
+
+    logger.info("No existing comment was found")
     return response
 
 
 def create_new_table(submission):
     'Create a new table if the other one is not present'
 
-    post_content = get_grafo_edits(submission)
-    'Let me post this'
-    # Give back current result that could be copy pasted into module
-    body = ""
-    body += "###" + submission.title + "\n" \
-            + "|#|user|comment|EDIT|Link" + "\n" \
-            + "|:--|:--|:--|:--|:--|" + "\n"
+    body = create_full_post_content(submission)
 
-    for i, entry in enumerate(post_content):
+    if body is not False:
 
-        body += "|" + str(i) + "|/u/" + entry[0] + "|" + entry[1] + "|" + entry[3] + "|[Link]("+ entry[4] + ")|" + "\n"
+        if WRITE_REPLIES:
+            try:
+                submission.reply(body)
+                logger.info("A new post in thread %s (ID: %s) was made", submission.title, submission.id)
+                logger.debug("A new post in thread %s (ID: %s) was made with the following content \n %s", submission.title, submission.id, body)
 
-    body += "\n \n" + "^(I am a little  bot who loves /u/SrGrafo but is a little lazy with hunting for EDITs)"
+                db.connect()
+                new_db_entry = Submission.get(Submission.thread_id == submission.id)
+                new_db_entry.post_created = True
+                new_db_entry.save()
+                db.close()
 
-    if WRITE_REPLIES:
-        submission.reply(body)
-        logger.info("A new post in thread %s (ID: %s) was made", submission.title, submission.id)
-        logger.debug("A new post in thread %s (ID: %s) was made with the following content \n %s", submission.title, submission.id, body)
+            except APIException as error:
+                logger.error(error)
+                pass
+
+
+        else:
+            logger.info("Would have posted in this thread, but SETTINGS prohibited it.")
+
 
 
 def get_grafo_edits(submission):
@@ -215,19 +234,62 @@ def get_grafo_edits(submission):
     return edit_storage
 
 
+def create_full_post_content(submission):
+
+    post_content = get_grafo_edits(submission)
+
+    if len(post_content) > 0:
+
+        'Let me post this'
+        # Give back current result that could be copy pasted into module
+        body = ""
+        body += "###" + submission.title + "\n" \
+                + "|#|user|comment|EDIT|Link" + "\n" \
+                + "|:--|:--|:--|:--|:--|" + "\n"
+
+        for i, entry in enumerate(post_content):
+            body += "|" + str(i) + "|/u/" + entry[0] + "|" + entry[1] + "|" + entry[3] + "|[Link](" + entry[
+                4] + ")|" + "\n"
+
+        body += "\n \n" + "^(I am a little  bot who loves /u/SrGrafo but is a little lazy with hunting for EDITs)"
+
+        return body
+
+    else:
+        logger.info("No EDITs found, process aborted.")
+        return False
+
 def update_table(check_existing, submission):
 
     'Find my own post'
+
+    db.connect()
+    new_db_entry = Submission.get(Submission.thread_id == submission.id)
+    new_db_entry.post_created = True
+    new_db_entry.save()
+    db.close()
 
     'For each row in table, start hashing'
     logger.info("Existing post in %s is being updated", check_existing)
     comment = reddit.comment(check_existing)
 
-    post_content = get_grafo_edits(submission)
+    post_content = create_full_post_content(submission)
 
-    if WRITE_REPLIES:
-        comment.edit(post_content)
-        logger.info("Post %s was updated", check_existing)
+    comment_hash = hashlib.md5(comment.body.encode('utf-8')).hexdigest()
+    post_content_hash = hashlib.md5(post_content.encode('utf-8')).hexdigest()
+
+    post_comparison = (comment_hash == post_content_hash)
+
+    if post_content is not False and post_comparison is False:
+        if WRITE_REPLIES:
+            comment.edit(post_content)
+            logger.info("Post %s was updated", check_existing)
+
+        else:
+            logger.info("Would have updated this table, but SETTINGS prohibited it.")
+
+    else:
+        logger.info("No need to update post.")
 
 
 def time_difference_to_now(time1):

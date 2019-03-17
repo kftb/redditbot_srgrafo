@@ -17,10 +17,12 @@ class Submission(BaseModel):
     date = DateTimeField()
     thread = BooleanField()
     comment = BooleanField()
+    post_created = BooleanField()
 
 def create_table():
     db.connect()
     db.create_tables([User, Submission])
+    user = User(username='/u/SrGrafo')
+    user.save()
     db.close()
 
-create_table()
