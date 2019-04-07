@@ -61,9 +61,9 @@ def check_for_submissions():
         logger.info("---------------------")
         logger.info("Starting the process now for ID %s", entry)
         make_entry(entry)
-    wait(WAITTIME)
 
-    'If not, sleep and repeat in 5 minutes'
+    if RUN_TIMED:
+        wait(WAITTIME)
 
 
 def check_for_current_submissions():
@@ -254,7 +254,7 @@ def create_full_post_content(submission):
 
             if entry[0] == 'srgrafo_edit_bot':
                 entry[1] = '[HA! YOU ALMOST GOT ME TO CREATE A BLACK HOLE, FELLOW HUMAN! BUT AS GOOD HUMAN, I SAW THROUGH YOUR EFFORTS, HAHA]'
-                
+
             body += "|" + str(i) + "|/u/" + entry[0] + "|" + entry[1] + "|" + entry[3] + "|[Link](" + entry[
                 4] + ")|" + "\n"
 
