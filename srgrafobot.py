@@ -247,7 +247,7 @@ def create_full_post_content(submission):
         # Give back current result that could be copy pasted into module
         body = ""
         body += "###" + submission.title + "\n" \
-                + "|#|user|comment|EDIT|Link" + "\n" \
+                + "|#|user|EDIT|comment|Link" + "\n" \
                 + "|:--|:--|:--|:--|:--|" + "\n"
 
         for i, entry in enumerate(post_content):
@@ -255,7 +255,7 @@ def create_full_post_content(submission):
             if entry[0] == 'srgrafo_edit_bot':
                 entry[1] = '[HA! YOU ALMOST GOT ME TO CREATE A BLACK HOLE, FELLOW HUMAN! BUT AS GOOD HUMAN, I SAW THROUGH YOUR EFFORTS, HAHA]'
 
-            body += "|" + str(i) + "|/u/" + entry[0] + "|" + entry[1] + "|" + entry[3] + "|[Link](" + entry[4] + ")|" + "\n"
+            body += "|" + str(i) + "|/u/" + entry[0] + "|" + entry[3] + "|" + entry[1] + "|[Link](" + entry[4] + ")|" + "\n"
 
         body += "\n \n" + "I am a little fan-made bot who loves /u/SrGrafo but is a little lazy with hunting for EDITs. If you want to support our great creator, check out his [Patreon](https://Patreon.com/SrGrafo)"
 
