@@ -186,6 +186,9 @@ def create_new_table(submission):
                 logger.error(error)
                 pass
 
+            except HTTPException as error:
+                logger.error(error)
+                pass
 
         else:
             logger.info("Would have posted in this thread, but SETTINGS prohibited it.")
