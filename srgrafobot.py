@@ -6,6 +6,7 @@ from settings import *
 from srgrafobot_peewee import User, Submission
 from datetime import datetime
 from praw.exceptions import APIException
+from prawcore.exceptions import Forbidden
 
 import hashlib
 import logging
@@ -186,7 +187,7 @@ def create_new_table(submission):
                 logger.error(error)
                 pass
 
-            except HTTPException as error:
+            except Forbidden as error:
                 logger.error(error)
                 pass
 
