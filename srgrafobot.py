@@ -6,7 +6,7 @@ from settings import *
 from srgrafobot_peewee import User, Submission
 from datetime import datetime
 from praw.exceptions import APIException
-from prawcore.exceptions import Forbidden
+from prawcore.exceptions import Forbidden, ResponseException, ServerError
 
 import hashlib
 import logging
@@ -38,6 +38,8 @@ reddit = praw.Reddit(user_agent=USER_AGENT,
 db = SqliteDatabase(DB)
 
 def check_for_submissions():
+    logger.info("--------------------")
+    logger.info("--------------------")
     logger.info("Starting script")
 
     'Check if SrGrafo has published a new post. If he did not, do nothing, if he did, trigger new routine.'
@@ -191,6 +193,14 @@ def create_new_table(submission):
                 logger.error(error)
                 pass
 
+            except ResponseException as error:
+                logger.error(error)
+                pass
+
+            except ServerError as error:
+                logger.error(error)
+                pass
+
         else:
             logger.info("Would have posted in this thread, but SETTINGS prohibited it.")
 
@@ -261,7 +271,7 @@ def create_full_post_content(submission):
 
             body += "|" + str(i) + "|/u/" + entry[0] + "|" + entry[3] + "|" + entry[1] + "|[Link](" + entry[4] + ")|" + "\n"
 
-        body += "\n \n" + "I am a little fan-made bot who loves /u/SrGrafo but is a little lazy with hunting for EDITs. If you want to support our great creator, check out his [Patreon](https://Patreon.com/SrGrafo)"
+        body += "\n \n" + MESSAGE_END
 
         return body
 
