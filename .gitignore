@@ -128,3 +128,6 @@ dmypy.json
 
 secret.py
 srgrafo_edit.db
+.vscode
+/.idea
+/logs
